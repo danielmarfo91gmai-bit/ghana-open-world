@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ghana Open World</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#111;font-family:Arial;color:white}
+#game{position:relative;width:100vw;height:100vh}
+canvas{width:100%;height:100%;display:block;background:#7fc8ed}
+#hud{position:absolute;top:12px;left:12px;right:12px;
+display:flex;justify-content:space-between;pointer-events:none}
+.badge{background:#000b;padding:9px 12px;border-radius:10px;font-weight:bold}
+#controls{position:absolute;bottom:20px;left:20px;right:20px;
+display:flex;justify-content:space-between;align-items:end}
+.pad{display:grid;grid-template-columns:55px 55px 55px;gap:6px}
+button{width:55px;height:55px;border:0;border-radius:14px;
+background:#ffffffdd;font-size:22px;font-weight:bold}
+.up{grid-column:2}.left{grid-column:1}.right{grid-column:3}
+.down{grid-column:2}
+#mission{width:auto;padding:0 16px;font-size:15px}
+</style>
+</head>
+
+<body>
+<div id="game">
+
+<canvas id="world"></canvas>
+
+<div id="hud">
+<div class="badge">🇬🇭 GHANA OPEN WORLD</div>
+<div class="badge" id="money">$500</div>
+</div>
+
+<div id="controls">
+<div class="pad">
+<button class="up" data-key="up">▲</button>
+<button class="left" data-key="left">◀</button>
+<button class="right" data-key="right">▶</button>
+<button class="down" data-key="down">▼</button>
+</div>
+
+<button id="mission">START MISSION</button>
+</div>
+
+</div>
+
+<script>
+const canvas=document.getElementById("world");
+const ctx=canvas.getContext("2d");
+
+let W,H;
+let player={
+ x:0,
+ y:0,
+ angle:0
+};
+
+let keys={
+ up:false,
+ down:false,
+ left:false,
+ right:false
+};
+
+let money=500;
+let mission=false;
+
+function resize(){
+ W=canvas.width=innerWidth;
+ H=canvas.height=innerHeight;
+}
+
+addEventListener("resize",resize);
+resize();
+
+document.querySelectorAll("[data-key]").forEach(button=>{
+ const key=button.dataset.key;
+
+ button.addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  keys[key]=true;
+ });
+
+ button.addEventListener("pointerup",()=>{
+  keys[key]=false;
+ });
+
+ button.addEventListener("pointercancel",()=>{
+  keys[key]=false;
+ });
+
+ button.addEventListener("pointerleave",()=>{
+  keys[key]=false;
+ });
+});
+
+addEventListener("keydown",e=>{
+ if(e.key==="ArrowUp")keys.up=true;
+ if(e.key==="ArrowDown")keys.down=true;
+ if(e.key==="ArrowLeft")keys.left=true;
+ if(e.key==="ArrowRight")keys.right=true;
+});
+
+addEventListener("keyup",e=>{
+ if(e.key==="ArrowUp")keys.up=false;
+ if(e.key==="ArrowDown")keys.down=false;
+ if(e.key==="ArrowLeft")keys.left=false;
+ if(e.key==="ArrowRight")keys.right=false;
+});
+
+document.getElementById("mission").onclick=()=>{
+ mission=!mission;
+ document.getElementById("mission").textContent=
+ mission?"MISSION ACTIVE":"START MISSION";
+};
+
+function update(){
+
+ if(keys.left)player.angle-=0.06;
+ if(keys.right)player.angle+=0.06;
+
+ let speed=3;
+
+ if(keys.up){
+  player.x+=Math.cos(player.angle)*speed;
+  player.y+=Math.sin(player.angle)*speed;
+ }
+
+ if(keys.down){
+  player.x-=Math.cos(player.angle)*speed;
+  player.y-=Math.sin(player.angle)*speed;
+ }
+}
+
+function building(x,y,w,h){
+ ctx.fillStyle="#b8a995";
+ ctx.fillRect(x,y,w,h);
+
+ ctx.fillStyle="#dfe7e9";
+ ctx.fillRect(x+10,y+12,25,20);
+ ctx.fillRect(x+w-35,y+12,25,20);
+
+ ctx.fillStyle="#59483b";
+ ctx.fillRect(x+w/2-15,y+h-35,30,35);
+}
+
+function road(x,y,w,h){
+ ctx.fillStyle="#3d4247";
+ ctx.fillRect(x,y,w,h);
+}
+
+function tree(x,y){
+ ctx.fillStyle="#69452f";
+ ctx.fillRect(x-5,y,10,35);
+
+ ctx.fillStyle="#27633a";
+ ctx.beginPath();
+ ctx.arc(x,y,27,0,Math.PI*2);
+ ctx.fill();
+}
+
+function car(x,y,angle,color){
+ ctx.save();
+ ctx.translate(x,y);
+ ctx.rotate(angle);
+
+ ctx.fillStyle=color;
+ ctx.fillRect(-30,-15,60,30);
+
+ ctx.fillStyle="#8fc6df";
+ ctx.fillRect(-17,-11,34,12);
+
+ ctx.fillStyle="#111";
+ ctx.fillRect(-24,-18,12,7);
+ ctx.fillRect(12,-18,12,7);
+ ctx.fillRect(-24,11,12,7);
+ ctx.fillRect(12,11,12,7);
+
+ ctx.restore();
+}
+
+function draw(){
+
+ ctx.clearRect(0,0,W,H);
+
+ // sky
+ ctx.fillStyle="#83c9ed";
+ ctx.fillRect(0,0,W,H);
+
+ // ground
+ ctx.fillStyle="#62805c";
+ ctx.fillRect(0,H*.45,W,H*.55);
+
+ // roads
+ road(0,H*.63,W,90);
+ road(W*.45,H*.45,90,H*.55);
+
+ // road markings
+ ctx.fillStyle="#e4d26b";
+
+ for(let i=0;i<W;i+=90){
+  ctx.fillRect(i,H*.672,45,5);
+ }
+
+ for(let i=H*.45;i<H;i+=80){
+  ctx.fillRect(W*.487,i,5,40);
+ }
+
+ // buildings
+ building(40,H*.48,120,90);
+ building(210,H*.48,130,90);
+ building(W-180,H*.48,130,90);
+ building(W-340,H*.48,120,90);
+
+ building(40,H*.78,140,90);
+ building(W-180,H*.78,140,90);
+
+ // trees
+ tree(30,H*.43);
+ tree(175,H*.42);
+ tree(W-30,H*.43);
+ tree(W-210,H*.42);
+
+ // cars
+ car(W*.28,H*.675,0,"#d94a3d");
+ car(W*.72,H*.675,Math.PI,"#e0bd35");
+
+ // mission checkpoint
+ if(mission){
+  let mx=W*.78;
+  let my=H*.55;
+
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.arc(mx,my,25,0,Math.PI*2);
+  ctx.stroke();
+
+  ctx.fillStyle="#2584ff";
+  ctx.beginPath();
+  ctx.arc(mx,my,10,0,Math.PI*2);
+  ctx.fill();
+ }
+
+ // player
+ let px=W/2+player.x;
+ let py=H*.73+player.y;
+
+ ctx.save();
+ ctx.translate(px,py);
+ ctx.rotate(player.angle);
+
+ ctx.fillStyle="#f1c27d";
+ ctx.beginPath();
+ ctx.arc(0,-15,9,0,Math.PI*2);
+ ctx.fill();
+
+ ctx.fillStyle="#24364a";
+ ctx.fillRect(-10,-5,20,30);
+
+ ctx.fillStyle="#1b2633";
+ ctx.fillRect(-10,25,7,15);
+ ctx.fillRect(3,25,7,15);
+
+ ctx.restore();
+}
+
+function gameLoop(){
+ update();
+ draw();
+ requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
