@@ -7,17 +7,18 @@
 <title>Ghana Open World</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#87ceeb;touch-action:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87ceeb;font-family:Arial,sans-serif;touch-action:none}
 #game,canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
-#hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;pointer-events:none}
+#hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
 .badge{background:#111d;color:white;padding:10px;border-radius:10px;font-size:12px;font-weight:bold}
-#message{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:#111c;color:white;padding:10px;border-radius:10px;font-size:12px;white-space:nowrap;pointer-events:none}
-#joystick{position:absolute;left:20px;bottom:20px;width:130px;height:130px;border-radius:50%;background:#ffffff30;border:2px solid #ffffff80;touch-action:none;z-index:5}
-#stick{position:absolute;left:38px;top:38px;width:50px;height:50px;border-radius:50%;background:#ffffffd9;pointer-events:none}
-#buttons{position:absolute;right:16px;bottom:22px;display:flex;gap:8px;z-index:5}
-.gameButton{width:62px;height:62px;border:0;border-radius:50%;background:#111d;color:white;font-weight:bold;touch-action:none}
-#mission{position:absolute;right:16px;bottom:100px;padding:12px;border:0;border-radius:10px;background:#ffd342;font-weight:bold;z-index:5;touch-action:manipulation}
-#lookHint{position:absolute;right:12px;top:100px;background:#1119;color:white;padding:8px 10px;border-radius:8px;font-size:11px;pointer-events:none}
+#message{position:absolute;top:62px;left:50%;transform:translateX(-50%);background:#111d;color:white;padding:10px 12px;border-radius:10px;font-size:12px;text-align:center;max-width:90%;pointer-events:none}
+#lookHint{position:absolute;right:12px;top:108px;background:#1119;color:white;padding:8px;border-radius:8px;font-size:11px;pointer-events:none}
+#joystick{position:absolute;left:18px;bottom:20px;width:130px;height:130px;border-radius:50%;background:#ffffff30;border:2px solid #ffffff80;touch-action:none;z-index:5}
+#stick{position:absolute;left:38px;top:38px;width:50px;height:50px;border-radius:50%;background:#ffffffdd;pointer-events:none}
+#buttons{position:absolute;right:14px;bottom:20px;display:flex;gap:8px;z-index:5}
+.gameButton{width:60px;height:60px;border:0;border-radius:50%;background:#142334e8;color:white;font-weight:bold;font-size:11px;touch-action:none}
+#mission{position:absolute;right:14px;bottom:92px;padding:12px;border:0;border-radius:10px;background:#ffd342;font-weight:bold;z-index:5;touch-action:manipulation}
+@media(max-width:380px){#joystick{width:112px;height:112px}#stick{left:30px;top:30px}.gameButton{width:53px;height:53px}}
 </style>
 </head>
 <body>
@@ -38,42 +39,35 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans
 </div>
 
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js"
-  }
-}
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js"}}
 </script>
-
 <script type="module">
 import * as THREE from "three";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/loaders/GLTFLoader.js";
+import {GLTFLoader} from "https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/loaders/GLTFLoader.js";
 
-const canvas = document.getElementById("canvas");
-const renderer = new THREE.WebGLRenderer({canvas,antialias:true});
+const canvas=document.getElementById("canvas");
+const message=document.getElementById("message");
+const moneyLabel=document.getElementById("money");
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
 renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.1;
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x8bc9ef);
-scene.fog = new THREE.Fog(0x8bc9ef,100,420);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x8bc9ef);
+scene.fog=new THREE.Fog(0x8bc9ef,130,440);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,900);
+let cameraYaw=0;
+let cameraPitch=.24;
 
-const camera = new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,800);
-
-// Camera controls: swipe right to look around
-let cameraYaw = 0;
-let cameraPitch = 0;
-
-scene.add(new THREE.HemisphereLight(0xe6f5ff,0x53613c,2));
-
-const sun = new THREE.DirectionalLight(0xffedcf,3);
+scene.add(new THREE.HemisphereLight(0xe6f5ff,0x52613c,2));
+const sun=new THREE.DirectionalLight(0xffedcf,3);
 sun.position.set(80,120,60);
-sun.castShadow = true;
+sun.castShadow=true;
 sun.shadow.mapSize.set(1024,1024);
 sun.shadow.camera.left=-100;
 sun.shadow.camera.right=100;
@@ -81,18 +75,17 @@ sun.shadow.camera.top=100;
 sun.shadow.camera.bottom=-100;
 scene.add(sun);
 
-function material(color,roughness=.85){
+function mat(color,roughness=.85){
  return new THREE.MeshStandardMaterial({color,roughness});
 }
+const grass=mat(0x548847);
+const roadMat=mat(0x30343a);
+const pavement=mat(0xb7b4a8);
+const glass=new THREE.MeshStandardMaterial({color:0x65b8d8,roughness:.25,metalness:.1});
+const yellow=mat(0xf5ce49);
 
-const grass = material(0x548847);
-const roadMat = material(0x30343a);
-const pavement = material(0xb7b4a8);
-const glass = new THREE.MeshStandardMaterial({color:0x65b8d8,roughness:.25,metalness:.1});
-const yellow = material(0xf5ce49);
-
-function block(w,h,d,x,y,z,mat,shadows=true){
- const mesh = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+function block(w,h,d,x,y,z,material,shadows=true){
+ const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
  mesh.position.set(x,y,z);
  mesh.castShadow=shadows;
  mesh.receiveShadow=true;
@@ -100,58 +93,43 @@ function block(w,h,d,x,y,z,mat,shadows=true){
  return mesh;
 }
 
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(600,600),grass);
+// Ground and road network
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),grass);
 ground.rotation.x=-Math.PI/2;
 ground.receiveShadow=true;
 scene.add(ground);
-
-// Roads and pavements
 block(24,.08,600,0,.04,0,roadMat,false);
 block(600,.08,24,0,.04,0,roadMat,false);
-block(16,.08,600,-115,.04,0,roadMat,false);
-block(16,.08,600,115,.04,0,roadMat,false);
-block(600,.08,16,0,.04,-115,roadMat,false);
-block(600,.08,16,0,.04,115,roadMat,false);
+for(const x of [-115,115])block(16,.08,600,x,.04,0,roadMat,false);
+for(const z of [-115,115])block(600,.08,16,0,.04,z,roadMat,false);
 
-for(const z of [-15,15]){
- block(600,.12,3,0,.08,z,pavement,false);
-}
-for(const x of [-15,15]){
- block(3,.12,600,x,.08,0,pavement,false);
-}
+for(const z of [-15,15])block(600,.12,3,0,.08,z,pavement,false);
+for(const x of [-15,15])block(3,.12,600,x,.08,0,pavement,false);
 
-for(let x=-280;x<290;x+=22){
- block(8,.025,.28,x,.10,0,yellow,false);
- block(6,.025,.22,x,.10,-115,yellow,false);
- block(6,.025,.22,x,.10,115,yellow,false);
-}
-for(let z=-280;z<290;z+=22){
- block(.28,.025,8,0,.10,z,yellow,false);
+for(let p=-280;p<290;p+=22){
+ block(8,.025,.25,p,.10,0,yellow,false);
+ block(.25,.025,8,0,.10,p,yellow,false);
+ block(6,.025,.22,p,.10,-115,yellow,false);
+ block(6,.025,.22,p,.10,115,yellow,false);
 }
 
-// City buildings
-const buildingColors=[0xd7c3a2,0xc8c5bd,0xe2d5bd,0xc2b0a0,0xd8d0bd,0xaaaeb3];
-
+// Buildings with windows and doors
+const buildingColors=[0xd7c3a2,0xc8c5bd,0xe2d5bd,0xc2b0a0,0xd8d0bd,0xaaaeb3,0xd8b58c];
 function makeBuilding(x,z,w,h,d,color){
- block(w,h,d,x,h/2,z,material(color));
- block(w+.5,.5,d+.5,x,h+.25,z,material(0x774a36),false);
-
- const front=z-d/2-.04;
+ block(w,h,d,x,h/2,z,mat(color));
+ block(w+.5,.5,d+.5,x,h+.25,z,mat(0x774a36),false);
+ const front=z-d/2-.05;
  const rows=Math.floor((h-4)/4);
  const cols=Math.max(2,Math.floor(w/4));
-
  for(let r=0;r<rows;r++){
   for(let c=0;c<cols;c++){
    const wx=x-w/2+2+(c+.5)*(w-4)/cols;
    const wy=3+r*4;
-   if(wy<h-1){
-    block(1.25,1.5,.08,wx,wy,front,glass,false);
-   }
+   if(wy<h-1)block(1.25,1.5,.08,wx,wy,front,glass,false);
   }
  }
- block(Math.min(4,w*.35),2,.15,x,1,z-d/2-.12,material(0x604a37),false);
+ block(Math.min(4,w*.35),2,.15,x,1,z-d/2-.13,mat(0x604a37),false);
 }
-
 const buildings=[
  [-48,-48,26,20,25], [48,-48,30,34,25],
  [-48,48,28,24,28], [48,48,25,30,26],
@@ -160,30 +138,27 @@ const buildings=[
  [-48,-160,28,28,25], [48,-160,26,38,25],
  [-48,160,30,34,26], [48,160,28,25,26],
  [-205,-100,22,20,25], [205,100,26,27,25],
- [-200,100,24,32,25], [200,-100,25,35,25]
+ [-200,100,24,32,25], [200,-100,25,35,25],
+ [-75,-85,18,16,20], [75,85,20,22,22],
+ [-85,85,18,19,20], [85,-85,20,25,20]
 ];
-
 for(const b of buildings){
  makeBuilding(...b.slice(0,5),buildingColors[Math.floor(Math.random()*buildingColors.length)]);
 }
 
-// Roadside trees
+// Trees with trunks and leafy crowns
 function makeTree(x,z){
- const trunk= new THREE.Mesh(
-  new THREE.CylinderGeometry(.35,.55,4,8),
-  material(0x76502e)
- );
- trunk.position.set(x,2,z);
+ const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.3,.48,3.5,8),mat(0x76502e));
+ trunk.position.set(x,1.75,z);
  trunk.castShadow=true;
  scene.add(trunk);
-
- for(let i=0;i<5;i++){
+ const colors=[0x286b31,0x347c37,0x3d873b];
+ for(let i=0;i<4;i++){
   const leaves=new THREE.Mesh(
-   new THREE.ConeGeometry(2.5,5,7),
-   material(i%2?0x286b31:0x347c37)
+   new THREE.SphereGeometry(1.8-i*.15,10,8),
+   mat(colors[i%colors.length])
   );
-  leaves.position.set(x+Math.sin(i*1.25)*1.3,5.1,z+Math.cos(i*1.25)*1.3);
-  leaves.rotation.z=Math.sin(i)*.2;
+  leaves.position.set(x+Math.sin(i*1.6)*.8,3.8+i*.45,z+Math.cos(i*1.6)*.8);
   leaves.castShadow=true;
   scene.add(leaves);
  }
@@ -195,12 +170,9 @@ for(let x=-260;x<=260;x+=32){
 
 // Streetlights
 function streetLight(x,z){
- block(.18,6,.18,x,3,z,material(0x303030),false);
- block(1.5,.12,.12,x+.6,5.8,z,material(0x303030),false);
- const lamp=new THREE.Mesh(
-  new THREE.SphereGeometry(.28,8,8),
-  new THREE.MeshBasicMaterial({color:0xffedaf})
- );
+ block(.18,6,.18,x,3,z,mat(0x303030),false);
+ block(1.5,.12,.12,x+.6,5.8,z,mat(0x303030),false);
+ const lamp=new THREE.Mesh(new THREE.SphereGeometry(.28,8,8),new THREE.MeshBasicMaterial({color:0xffedaf}));
  lamp.position.set(x+1.25,5.7,z);
  scene.add(lamp);
 }
@@ -209,48 +181,43 @@ for(let z=-220;z<=220;z+=55){
  streetLight(17,z);
 }
 
-// Cars
-function makeCar(x,z,color){
+// Parked cars
+function makeCar(x,z,color,rotation=0){
  const car=new THREE.Group();
- car.position.set(x,.5,z);
-
- const body=new THREE.Mesh(new THREE.BoxGeometry(4.5,1.1,2.2),material(color,.45));
+ car.position.set(x,.55,z);
+ car.rotation.y=rotation;
+ const body=new THREE.Mesh(new THREE.BoxGeometry(4.5,1.1,2.2),mat(color,.45));
  body.castShadow=true;
  car.add(body);
-
  const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.5,1,1.8),glass);
  cabin.position.set(-.2,.9,0);
  car.add(cabin);
-
- const wheelMat=material(0x171717,.95);
+ const wheelMat=mat(0x171717,.95);
  for(const wx of [-1.4,1.4]){
   for(const wz of [-1.05,1.05]){
-   const wheel=new THREE.Mesh(
-    new THREE.CylinderGeometry(.48,.48,.28,12),
-    wheelMat
-   );
+   const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.28,12),wheelMat);
    wheel.rotation.x=Math.PI/2;
    wheel.position.set(wx,-.35,wz);
    car.add(wheel);
   }
  }
  scene.add(car);
- return car;
 }
 makeCar(-35,-7,0xc62f2f);
 makeCar(35,7,0x1b63c9);
-makeCar(-7,42,0xe7b52b);
+makeCar(-7,42,0xe7b52b,Math.PI/2);
+makeCar(42,-35,0xffffff);
 
-// Player
+// Player character
 const player=new THREE.Group();
 scene.add(player);
 player.position.set(0,0,15);
 
 function makeFallback(){
  const person=new THREE.Group();
- const skin=material(0x9a603c);
- const shirt=material(0x205a9b);
- const trousers=material(0x222633);
+ const skin=mat(0x9a603c);
+ const shirt=mat(0x205a9b);
+ const trousers=mat(0x222633);
  const torso=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.5,.55),shirt);
  torso.position.y=1.85;
  person.add(torso);
@@ -270,33 +237,23 @@ function makeFallback(){
  return person;
 }
 
-let model=null;
-let mixer=null;
-let idleAction=null;
-let walkAction=null;
-let activeAction=null;
-
+let mixer=null,idleAction=null,walkAction=null,activeAction=null;
 function switchAnimation(next){
- if(!next || next===activeAction)return;
+ if(!next||next===activeAction)return;
  next.reset().play();
  if(activeAction)activeAction.crossFadeTo(next,.2,false);
  activeAction=next;
 }
-
 const loader=new GLTFLoader();
 loader.load(
  "https://threejs.org/examples/models/gltf/Soldier.glb",
  gltf=>{
-  model=gltf.scene;
+  const model=gltf.scene;
   model.scale.setScalar(1.65);
   model.traverse(o=>{
-   if(o.isMesh){
-    o.castShadow=true;
-    o.receiveShadow=true;
-   }
+   if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}
   });
   player.add(model);
-
   mixer=new THREE.AnimationMixer(model);
   for(const clip of gltf.animations){
    const name=clip.name.toLowerCase();
@@ -304,39 +261,48 @@ loader.load(
    if(name.includes("idle"))idleAction=action;
    if(name.includes("walk")||name.includes("run"))walkAction=action;
   }
-  activeAction=idleAction||gltf.animations[0]&&mixer.clipAction(gltf.animations[0]);
+  activeAction=idleAction||(gltf.animations[0]&&mixer.clipAction(gltf.animations[0]));
   if(activeAction)activeAction.play();
-  document.getElementById("message").textContent="Welcome! Explore the city.";
+  message.textContent="Welcome! Explore the city.";
  },
  undefined,
  error=>{
   console.error("Character model failed to load",error);
   player.add(makeFallback());
-  document.getElementById("message").textContent="Explore the city";
+  message.textContent="Explore the city!";
  }
 );
 
 // Mission marker
-const marker=new THREE.Mesh(
+const marker=new THREE.Group();
+const ring=new THREE.Mesh(
  new THREE.TorusGeometry(2.5,.3,10,28),
  new THREE.MeshBasicMaterial({color:0x168cff})
 );
-marker.rotation.x=Math.PI/2;
-marker.position.set(48,.3,-48);
+ring.rotation.x=Math.PI/2;
+ring.position.y=.3;
+marker.add(ring);
+const beam=new THREE.Mesh(
+ new THREE.CylinderGeometry(.08,.6,5,12,1,true),
+ new THREE.MeshBasicMaterial({color:0x168cff,transparent:true,opacity:.25,side:THREE.DoubleSide})
+);
+beam.position.y=2.7;
+marker.add(beam);
+marker.position.set(48,0,-48);
 scene.add(marker);
 
 let mission=false;
+let money=500;
 document.getElementById("mission").onclick=()=>{
  mission=!mission;
  document.getElementById("mission").textContent=mission?"MISSION ACTIVE":"START MISSION";
- document.getElementById("message").textContent=mission?"Reach the glowing blue marker!":"Explore the city";
+ message.textContent=mission?"Reach the glowing blue marker!":"Explore the city!";
 };
 
-// Movement joystick
+// Mobile joystick
 const joystick=document.getElementById("joystick");
 const stick=document.getElementById("stick");
 let joyX=0,joyY=0,joyActive=false;
-
 function moveStick(e){
  const r=joystick.getBoundingClientRect();
  let dx=e.clientX-(r.left+r.width/2);
@@ -349,6 +315,7 @@ function moveStick(e){
  stick.style.transform=`translate(${dx}px,${dy}px)`;
 }
 joystick.addEventListener("pointerdown",e=>{
+ e.preventDefault();
  joyActive=true;
  joystick.setPointerCapture(e.pointerId);
  moveStick(e);
@@ -356,65 +323,53 @@ joystick.addEventListener("pointerdown",e=>{
 joystick.addEventListener("pointermove",e=>{if(joyActive)moveStick(e);});
 function resetStick(){
  joyActive=false;
- joyX=0;
- joyY=0;
+ joyX=0;joyY=0;
  stick.style.transform="translate(0,0)";
 }
 joystick.addEventListener("pointerup",resetStick);
 joystick.addEventListener("pointercancel",resetStick);
 
-// Swipe camera on the right side of the screen
-let lookPointer=null;
-let lastLookX=0;
-let lastLookY=0;
-
+// Swipe camera on the open right side of the screen
+let lookPointer=null,lastLookX=0,lastLookY=0;
 canvas.addEventListener("pointerdown",e=>{
- if(e.clientX>innerWidth*0.45){
+ if(e.clientX>innerWidth*.45){
   lookPointer=e.pointerId;
   lastLookX=e.clientX;
   lastLookY=e.clientY;
   canvas.setPointerCapture(e.pointerId);
  }
 });
-
 canvas.addEventListener("pointermove",e=>{
  if(e.pointerId!==lookPointer)return;
-
  const dx=e.clientX-lastLookX;
  const dy=e.clientY-lastLookY;
-
- cameraYaw-=dx*0.008;
- cameraPitch=THREE.MathUtils.clamp(
-  cameraPitch-dy*0.025,-2,3
- );
-
+ cameraYaw-=dx*.008;
+ cameraPitch=THREE.MathUtils.clamp(cameraPitch-dy*.008,-.2,.85);
  lastLookX=e.clientX;
  lastLookY=e.clientY;
 });
-
 function stopLooking(e){
  if(e.pointerId===lookPointer)lookPointer=null;
 }
 canvas.addEventListener("pointerup",stopLooking);
 canvas.addEventListener("pointercancel",stopLooking);
 
-// Keyboard controls
+// Keyboard controls for computers
 const keys={};
 addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;});
 addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
 
-let verticalSpeed=0;
-let onGround=true;
+// Jump physics
+let verticalSpeed=0,onGround=true;
 document.getElementById("jump").onclick=()=>{
  if(onGround){
-  verticalSpeed=.22;
+  verticalSpeed=7;
   onGround=false;
  }
 };
 document.getElementById("action").onclick=()=>{
- const distance=player.position.distanceTo(marker.position);
- document.getElementById("message").textContent=
-  distance<8?"Mission point reached! Well done!":"You looked around. Keep exploring!";
+ const distance=Math.hypot(player.position.x-marker.position.x,player.position.z-marker.position.z);
+ message.textContent=distance<8?"Mission point reached! Well done!":"Keep exploring and find the blue mission marker!";
 };
 
 const clock=new THREE.Clock();
@@ -423,28 +378,27 @@ let moving=false;
 function update(dt){
  let forward=-joyY;
  let side=joyX;
-
  if(keys.w||keys.arrowup)forward=1;
  if(keys.s||keys.arrowdown)forward=-1;
  if(keys.a||keys.arrowleft)side=-1;
  if(keys.d||keys.arrowright)side=1;
 
- moving=forward!==0||side!==0;
-
+ moving=Math.abs(forward)>.05||Math.abs(side)>.05;
  if(moving){
   const length=Math.hypot(forward,side)||1;
   forward/=length;
   side/=length;
 
+  // Correct camera-relative movement:
+  // forward is toward negative Z when the camera yaw is zero.
+  const moveX=Math.sin(cameraYaw)*forward+Math.cos(cameraYaw)*side;
+  const moveZ=-Math.cos(cameraYaw)*forward+Math.sin(cameraYaw)*side;
   const speed=8*dt;
-  const direction=cameraYaw;
+  player.position.x+=moveX*speed;
+  player.position.z+=moveZ*speed;
 
-  player.position.x+=
-   (Math.cos(direction)*side+Math.sin(direction)*forward)*speed;
-  player.position.z+=
-   (-Math.sin(direction)*side+Math.cos(direction)*forward)*speed;
-
-  player.rotation.y=Math.atan2(side,forward)+cameraYaw;
+  // Face the direction the character is travelling.
+  player.rotation.y=Math.atan2(moveX,-moveZ);
  }
 
  player.position.x=THREE.MathUtils.clamp(player.position.x,-275,275);
@@ -455,50 +409,46 @@ function update(dt){
   switchAnimation(moving?(walkAction||idleAction):idleAction);
  }
 
- if(!onGround||verticalSpeed>0){
-  player.position.y+=verticalSpeed;
-  verticalSpeed-=.012;
+ if(!onGround){
+  player.position.y+=verticalSpeed*dt;
+  verticalSpeed-=18*dt;
   if(player.position.y<=0){
    player.position.y=0;
    verticalSpeed=0;
    onGround=true;
   }
  }
- 
- if(mission && player.position.distanceTo(marker.position)<5){
+
+ marker.rotation.y+=dt*.5;
+ ring.rotation.z+=dt*.8;
+
+ const distance=Math.hypot(player.position.x-marker.position.x,player.position.z-marker.position.z);
+ if(mission&&distance<5){
   mission=false;
+  money+=100;
+  moneyLabel.textContent="$"+money;
   document.getElementById("mission").textContent="START MISSION";
-  document.getElementById("message").textContent="Mission completed! +$100";
-  document.getElementById("money").textContent="$600";
+  message.textContent="Mission completed! You earned $100!";
  }
 }
 
-// Follow camera with adjustable view height
+// Camera stays behind the player and follows the swipe angle.
 function followCamera(dt){
- const angle=player.rotation.y+cameraYaw;
  const distance=10;
- const height=THREE.MathUtils.clamp(6+cameraPitch,3,10);
-
+ const horizontal=distance*Math.cos(cameraPitch);
  const desired=new THREE.Vector3(
-  player.position.x-Math.sin(angle)*distance,
-  player.position.y+height,
-  player.position.z-Math.cos(angle)*distance
+  player.position.x+Math.sin(cameraYaw)*horizontal,
+  player.position.y+2+distance*Math.sin(cameraPitch),
+  player.position.z+Math.cos(cameraYaw)*horizontal
  );
-
- camera.position.lerp(desired,1-Math.exp(-4*dt));
-
- camera.lookAt(
-  player.position.x,
-  player.position.y+1.8+cameraPitch*.15,
-  player.position.z
- );
+ camera.position.lerp(desired,1-Math.exp(-5*dt));
+ camera.lookAt(player.position.x,player.position.y+1.6,player.position.z);
 }
 
 function animate(){
  requestAnimationFrame(animate);
  const dt=Math.min(clock.getDelta(),.05);
  update(dt);
- marker.rotation.z+=dt*.8;
  followCamera(dt);
  renderer.render(scene,camera);
 }
