@@ -595,9 +595,13 @@ const clock = new THREE.Clock();
 
 const modeEl = document.getElementById("mode");
 const enterBtn = document.getElementById("enter");
-const exitBtn = document.getElementById("exit");
+const exitBtn = document.getElementById("exit");  
 const gasBtn = document.getElementById("accelerate");
 const brakeBtn = document.getElementById("brake");
+const driveEl = document.getElementById("drive");
+const reverseBtn = document.getElementById("reverse");
+const jumpBtn = document.getElementById("jump");
+const resetBtn = document.getElementById("reset");  
 function nearestCar() {
   let nearest = null;
   let bestDistance = 5.5;
@@ -630,7 +634,9 @@ function enterCar() {
   modeEl.textContent = "Driving";
   enterBtn.textContent = "Driving";
 }
-
+driveEl.style.display = "flex";
+exitBtn.style.display = "block";
+enterBtn.style.display = "none";
 function exitCar() {
   if (!activeCar) return;
 
@@ -649,7 +655,9 @@ function exitCar() {
   modeEl.textContent = "On foot";
   enterBtn.textContent = "Enter car";
 }
-
+driveEl.style.display = "none";
+exitBtn.style.display = "none";
+enterBtn.style.display = "block";
 enterBtn.addEventListener("click", function () {
   if (activeCar) {
     exitCar();
