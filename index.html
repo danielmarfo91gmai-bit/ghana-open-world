@@ -598,6 +598,32 @@ const enterBtn = document.getElementById("enter");
 const exitBtn = document.getElementById("exit");  
 const gasBtn = document.getElementById("accelerate");
 const brakeBtn = document.getElementById("brake");
+ reverseBtn.addEventListener("pointerdown", () => {
+  keys["s"] = true;
+});
+
+reverseBtn.addEventListener("pointerup", () => {
+  keys["s"] = false;
+});
+
+reverseBtn.addEventListener("pointercancel", () => {
+  keys["s"] = false;
+});
+
+reverseBtn.addEventListener("pointerleave", () => {
+  keys["s"] = false;
+});
+
+jumpBtn.addEventListener("click", () => {
+  if (!activeCar && player.position.y <= 0.01) {
+    jumpTime = 0.55;
+  }
+});
+
+resetBtn.addEventListener("click", () => {
+  pitch = 0.18;
+  yaw = activeCar ? activeCar.heading : 0;
+}); 
 const driveEl = document.getElementById("drive");
 const reverseBtn = document.getElementById("reverse");
 const jumpBtn = document.getElementById("jump");
