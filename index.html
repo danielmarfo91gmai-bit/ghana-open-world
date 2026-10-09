@@ -11,12 +11,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans
 #game,canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;pointer-events:none}
 .badge{background:#111d;color:white;padding:10px;border-radius:10px;font-size:12px;font-weight:bold}
-#message{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:#111c;color:white;padding:10px;border-radius:10px;font-size:12px;white-space:nowrap}
-#joystick{position:absolute;left:20px;bottom:20px;width:120px;height:120px;border-radius:50%;background:#ffffff30;border:2px solid #ffffff80;touch-action:none}
-#stick{position:absolute;left:33px;top:33px;width:50px;height:50px;border-radius:50%;background:#ffffffd9;pointer-events:none}
-#buttons{position:absolute;right:16px;bottom:22px;display:flex;gap:8px}
-.gameButton{width:62px;height:62px;border:0;border-radius:50%;background:#111d;color:white;font-weight:bold;touch-action:manipulation}
-#mission{position:absolute;right:18px;bottom:96px;padding:12px;border:0;border-radius:10px;background:#ffd342;font-weight:bold}
+#message{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:#111c;color:white;padding:10px;border-radius:10px;font-size:12px;white-space:nowrap;pointer-events:none}
+#joystick{position:absolute;left:20px;bottom:20px;width:130px;height:130px;border-radius:50%;background:#ffffff30;border:2px solid #ffffff80;touch-action:none;z-index:5}
+#stick{position:absolute;left:38px;top:38px;width:50px;height:50px;border-radius:50%;background:#ffffffd9;pointer-events:none}
+#buttons{position:absolute;right:16px;bottom:22px;display:flex;gap:8px;z-index:5}
+.gameButton{width:62px;height:62px;border:0;border-radius:50%;background:#111d;color:white;font-weight:bold;touch-action:none}
+#mission{position:absolute;right:16px;bottom:100px;padding:12px;border:0;border-radius:10px;background:#ffd342;font-weight:bold;z-index:5;touch-action:manipulation}
+#lookHint{position:absolute;right:12px;top:100px;background:#1119;color:white;padding:8px 10px;border-radius:8px;font-size:11px;pointer-events:none}
 </style>
 </head>
 <body>
@@ -27,6 +28,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans
 <div class="badge" id="money">$500</div>
 </div>
 <div id="message">Loading your 3D world...</div>
+<div id="lookHint">SWIPE RIGHT SIDE TO LOOK</div>
 <div id="joystick"><div id="stick"></div></div>
 <button id="mission">START MISSION</button>
 <div id="buttons">
@@ -62,6 +64,10 @@ scene.background = new THREE.Color(0x8bc9ef);
 scene.fog = new THREE.Fog(0x8bc9ef,100,420);
 
 const camera = new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,800);
+
+// Camera controls: swipe right to look around
+let cameraYaw = 0;
+let cameraPitch = 0;
 
 scene.add(new THREE.HemisphereLight(0xe6f5ff,0x53613c,2));
 
@@ -161,7 +167,7 @@ for(const b of buildings){
  makeBuilding(...b.slice(0,5),buildingColors[Math.floor(Math.random()*buildingColors.length)]);
 }
 
-// Palm-like roadside trees
+// Roadside trees
 function makeTree(x,z){
  const trunk= new THREE.Mesh(
   new THREE.CylinderGeometry(.35,.55,4,8),
@@ -203,7 +209,7 @@ for(let z=-220;z<=220;z+=55){
  streetLight(17,z);
 }
 
-// Decorative vehicles
+// Cars
 function makeCar(x,z,color){
  const car=new THREE.Group();
  car.position.set(x,.5,z);
@@ -235,7 +241,7 @@ makeCar(-35,-7,0xc62f2f);
 makeCar(35,7,0x1b63c9);
 makeCar(-7,42,0xe7b52b);
 
-// Player root and fallback character
+// Player
 const player=new THREE.Group();
 scene.add(player);
 player.position.set(0,0,15);
@@ -269,7 +275,6 @@ let mixer=null;
 let idleAction=null;
 let walkAction=null;
 let activeAction=null;
-let modelReady=false;
 
 function switchAnimation(next){
  if(!next || next===activeAction)return;
@@ -301,7 +306,6 @@ loader.load(
   }
   activeAction=idleAction||gltf.animations[0]&&mixer.clipAction(gltf.animations[0]);
   if(activeAction)activeAction.play();
-  modelReady=true;
   document.getElementById("message").textContent="Welcome! Explore the city.";
  },
  undefined,
@@ -328,7 +332,7 @@ document.getElementById("mission").onclick=()=>{
  document.getElementById("message").textContent=mission?"Reach the glowing blue marker!":"Explore the city";
 };
 
-// Touch joystick
+// Movement joystick
 const joystick=document.getElementById("joystick");
 const stick=document.getElementById("stick");
 let joyX=0,joyY=0,joyActive=false;
@@ -337,7 +341,7 @@ function moveStick(e){
  const r=joystick.getBoundingClientRect();
  let dx=e.clientX-(r.left+r.width/2);
  let dy=e.clientY-(r.top+r.height/2);
- const max=38;
+ const max=42;
  const length=Math.hypot(dx,dy);
  if(length>max){dx=dx/length*max;dy=dy/length*max;}
  joyX=dx/max;
@@ -351,11 +355,48 @@ joystick.addEventListener("pointerdown",e=>{
 });
 joystick.addEventListener("pointermove",e=>{if(joyActive)moveStick(e);});
 function resetStick(){
- joyActive=false;joyX=0;joyY=0;
+ joyActive=false;
+ joyX=0;
+ joyY=0;
  stick.style.transform="translate(0,0)";
 }
 joystick.addEventListener("pointerup",resetStick);
 joystick.addEventListener("pointercancel",resetStick);
+
+// Swipe camera on the right side of the screen
+let lookPointer=null;
+let lastLookX=0;
+let lastLookY=0;
+
+canvas.addEventListener("pointerdown",e=>{
+ if(e.clientX>innerWidth*0.45){
+  lookPointer=e.pointerId;
+  lastLookX=e.clientX;
+  lastLookY=e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+ }
+});
+
+canvas.addEventListener("pointermove",e=>{
+ if(e.pointerId!==lookPointer)return;
+
+ const dx=e.clientX-lastLookX;
+ const dy=e.clientY-lastLookY;
+
+ cameraYaw-=dx*0.008;
+ cameraPitch=THREE.MathUtils.clamp(
+  cameraPitch-dy*0.025,-2,3
+ );
+
+ lastLookX=e.clientX;
+ lastLookY=e.clientY;
+});
+
+function stopLooking(e){
+ if(e.pointerId===lookPointer)lookPointer=null;
+}
+canvas.addEventListener("pointerup",stopLooking);
+canvas.addEventListener("pointercancel",stopLooking);
 
 // Keyboard controls
 const keys={};
@@ -392,11 +433,18 @@ function update(dt){
 
  if(moving){
   const length=Math.hypot(forward,side)||1;
-  forward/=length;side/=length;
+  forward/=length;
+  side/=length;
+
   const speed=8*dt;
-  player.position.z+=forward*speed;
-  player.position.x+=side*speed;
-  player.rotation.y=Math.atan2(side,forward);
+  const direction=cameraYaw;
+
+  player.position.x+=
+   (Math.cos(direction)*side+Math.sin(direction)*forward)*speed;
+  player.position.z+=
+   (-Math.sin(direction)*side+Math.cos(direction)*forward)*speed;
+
+  player.rotation.y=Math.atan2(side,forward)+cameraYaw;
  }
 
  player.position.x=THREE.MathUtils.clamp(player.position.x,-275,275);
@@ -416,7 +464,7 @@ function update(dt){
    onGround=true;
   }
  }
-
+ 
  if(mission && player.position.distanceTo(marker.position)<5){
   mission=false;
   document.getElementById("mission").textContent="START MISSION";
@@ -425,15 +473,25 @@ function update(dt){
  }
 }
 
+// Follow camera with adjustable view height
 function followCamera(dt){
- const behind=new THREE.Vector3(
-  -Math.sin(player.rotation.y)*10,
-  6,
-  -Math.cos(player.rotation.y)*10
+ const angle=player.rotation.y+cameraYaw;
+ const distance=10;
+ const height=THREE.MathUtils.clamp(6+cameraPitch,3,10);
+
+ const desired=new THREE.Vector3(
+  player.position.x-Math.sin(angle)*distance,
+  player.position.y+height,
+  player.position.z-Math.cos(angle)*distance
  );
- const desired=player.position.clone().add(behind);
+
  camera.position.lerp(desired,1-Math.exp(-4*dt));
- camera.lookAt(player.position.x,player.position.y+1.8,player.position.z);
+
+ camera.lookAt(
+  player.position.x,
+  player.position.y+1.8+cameraPitch*.15,
+  player.position.z
+ );
 }
 
 function animate(){
