@@ -594,11 +594,10 @@ let jumpTime = 0;
 const clock = new THREE.Clock();
 
 const modeEl = document.getElementById("mode");
-const enterBtn = document.getElementById("enterBtn");
-const exitBtn = document.getElementById("exitBtn");
-const gasBtn = document.getElementById("gasBtn");
-const brakeBtn = document.getElementById("brakeBtn");
-
+const enterBtn = document.getElementById("enter");
+const exitBtn = document.getElementById("exit");
+const gasBtn = document.getElementById("accelerate");
+const brakeBtn = document.getElementById("brake");
 function nearestCar() {
   let nearest = null;
   let bestDistance = 5.5;
@@ -705,8 +704,8 @@ window.addEventListener("pointercancel", () => {
 });
 
 // Mobile movement joystick
-const joystick = document.getElementById("joystick");
-const stick = document.getElementById("stick");
+const joystick = document.getElementById("stick");
+const stick = document.getElementById("nub");
 
 let joyX = 0;
 let joyY = 0;
